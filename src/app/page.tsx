@@ -6,7 +6,6 @@ import {
   UnifiedWalletButton,
   useWallet,
 } from "@jup-ag/wallet-adapter";
-import { createCollection, ruleSet } from "@metaplex-foundation/mpl-core";
 import {
   createNft,
   findMetadataPda,
@@ -37,31 +36,21 @@ export default function page() {
     const collectionMetadata = {
       name: "MemeBear Collection",
       description: "Your wallet's trading history, but in bear form.",
-      symbol: "MEME",
       image:
-        "https://www.shutterstock.com/image-vector/cute-bear-illustration-perfect-childrens-600nw-2472783349.jpg",
-      external_url:
         "https://www.shutterstock.com/image-vector/cute-bear-illustration-perfect-childrens-600nw-2472783349.jpg",
     };
     const collectionMetadataUri = await uploadMetadata(collectionMetadata);
     console.log(collectionMetadataUri, "collectionMetadataUri");
 
-    const creator1 = UMIPublicKey(
-      "EaL4oCNMJUDbPQ59mSePWAWDCiCFquWgD1n4S9sAg5Sr"
-    );
+    const mint = generateSigner(umi);
 
-    const tx = await createCollection(umi, {
-      collection,
-      name: "My Collection",
+    const tx = await createNft(umi, {
+      mint: mint,
+      name: "MemeBear 3",
+      symbol: "MEME",
+      sellerFeeBasisPoints: percentAmount(0),
+      isCollection: true,
       uri: collectionMetadataUri,
-      plugins: [
-        {
-          type: "Royalties",
-          basisPoints: 250,
-          creators: [{ address: creator1, percentage: 100 }],
-          ruleSet: ruleSet("None"),
-        },
-      ],
     }).sendAndConfirm(umi);
     const signature = base58.deserialize(tx.signature)[0];
     console.log(signature, "signature");
@@ -135,17 +124,20 @@ export default function page() {
     console.log(metadataUri, "metadataUri");
 
     const collectionNftAddress = UMIPublicKey(
-      "9tZPGrBJPACrvuVthMrmQwjYcULoAtirDB1TAukwnShx"
+      "E1vTx3YL3EHBVGdUBiMzkxxP863dLc6nDQgqZkJQdtJp"
     );
 
     const creator1 = UMIPublicKey(
       "9bARipSq8xHuh6udnhzc7fdYpnpxf6c3i9Zs4GdwuAM3"
     );
+
     const creator2 = UMIPublicKey(
       "3KfUcTXzkaeyssSWCt2RB9q1gGmMdrKQdDBrM8hMJdq8"
     );
 
     const mint = generateSigner(umi);
+
+    console.log(mint.publicKey.toString(), "mint key");
 
     const tx = transactionBuilder()
       .add(
@@ -168,6 +160,7 @@ export default function page() {
           name: "MemeBear 3",
           symbol: "MEME",
           uri: metadataUri,
+          updateAuthority: umi.identity.publicKey,
           sellerFeeBasisPoints: percentAmount(2.5),
           creators: [
             {
@@ -200,15 +193,21 @@ export default function page() {
       }
 
       const nftAddress = UMIPublicKey(
-        "H7iYGCzdqXFBJEU4r9eyJhgYWpK37BRSUvZeYnenajUB"
+        "E95MQo7BeyKQJLf5b1M5weat7NLanLunfQn6cf3fP9JG"
       );
+
       const collectionAddress = UMIPublicKey(
-        "9qEiVGQdEdNBBG3i5tsTvdQZ3Gvyf8yw4Ek9DcYDKJVq"
+        "E1vTx3YL3EHBVGdUBiMzkxxP863dLc6nDQgqZkJQdtJp"
       );
 
       const nftMetadata = findMetadataPda(umi, { mint: nftAddress });
 
+      const collectionMetadata = findMetadataPda(umi, {
+        mint: collectionAddress,
+      });
+
       console.log(nftMetadata, "nftMetadata");
+      console.log(collectionMetadata, "collectionMetadata");
 
       try {
         const tx = await verifyCollectionV1(umi, {
